@@ -40,32 +40,35 @@ pthread_mutex_t comer =  PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t comiendo =  PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t puede_comer = PTHREAD_COND_INITIALIZER;
 void * enanitos(void * p){
+    int valor_sem;
     int id = (int)p;
+    while(1){
     printf("El enanito %d está en la mina\n",id+1);
-    sleep(5);
+    sleep(20);
     sem_wait(&sillas);
     printf("El enanito %d esta sentado, esperando a Blancanieves...\n",id+1);
     pthread_cond_wait(&puede_comer,&comiendo);
-    printf("El enanito %d esta comiendo\n",id+1);
+    sem_getvalue(&sillas,&valor_sem);
+    printf("El enanito %d esta comiendo, semaforo %d\n",id+1,valor_sem);
     sleep(10);
     sem_post(&sillas);
+    printf("El enanito %d terminó de comer, semaforo %d\n",id+1,valor_sem);
+    pthread_mutex_unlock(&comiendo);}
     pthread_exit(NULL);
 }
 void * blancanieves(void * p){
     int valor_sem;
     while (1) {
         sem_getvalue(&sillas, &valor_sem);
-        printf("Valor de semáforo %d\n",valor_sem);
         if (valor_sem < 4) {
-            printf("Atendiendo enanos...\n");
             pthread_cond_signal(&puede_comer);
         }
         else
         {
-            pthread_mutex_lock(&comiendo);
-            printf("Estoy de paseo por 5 segundos...\n");
+	   pthread_mutex_lock(&comer);
+            printf("Estoy de paseo por 15 segundos...\n");
             sleep(15);
-            pthread_mutex_unlock(&comiendo);
+            pthread_mutex_unlock(&comer);
         }
     }
     pthread_exit(NULL);
